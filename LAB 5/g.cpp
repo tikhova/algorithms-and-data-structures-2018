@@ -11,7 +11,6 @@
 #include <iostream>
 #include <algorithm>
 using namespace std;
-vector<int> a;
  
 struct node {
     int y;
@@ -29,19 +28,11 @@ int getC(node * t) {
     return 0;
 }
  
-bool getHasZero(node * t) {
-    if (t) {
-        return t->hasZero;
-    }
-    return false;
-}
- 
 void fix(node * t) {
     if (!t) {
         return;
     }
     t->c = getC(t->left) + getC(t->right) + 1;
-    t->hasZero = t->value == 0 || getHasZero(t->left) || getHasZero(t->right);
 }
  
 void split(node * t, int x, node *&t1, node *&t2) {
@@ -80,53 +71,19 @@ node * merge(node * t1, node * t2) {
     }
 }
  
-node * newTreap(int n) {
+node * newTreap(vector<int> a) {
     node * res = nullptr;
-    for (int i = 0; i < n; ++i) {
-        res = merge(res, new node{ rand(), 1, 0, true });
+    for (int i = 0; i < a.size(); ++i) {
+        res = merge(res, new node{ rand(), 1, a.at(i), true });
     }
     return res;
 }
  
-node * del(node * t, int x) {
-    node *t1, *t2, *t3, *t4;
-    split(t, x, t1, t2);
-    split(t2, 1, t3, t4);
-    t = merge(t1, t4);
-    fix(t);
-    return t;
-}
- 
-int findZero(node * t) {
-    if (!t || !getHasZero(t)) {
-        return -1;
-    }
-    if (getHasZero(t->left)) {
-        return findZero(t->left);
-    }
-    if (t->value == 0) {
-        return getC(t->left);
-    }
-    if (findZero(t->right) == -1) {
-        return -1;
-    }
-    return getC(t->left) + 1 + findZero(t->right);
-}
- 
-node * insert(node * t, int l, int k) {
-    node * t1 = nullptr;
-    node * t2 = nullptr;
-    int size = getC(t);
-    if (size < l) {
-        t = merge(t, newTreap(l - size));
-    }
+node * moveToFront(node * t, int l, int r) {
+    node * t1, *t2, *t3;
     split(t, l, t1, t2);
-    int x = findZero(t2);
-    if (x != -1) {
-        t2 = del(t2, x);
-    }
-    node * root = new node{ rand(), 1, k };
-    return merge(merge(t1, root), t2);
+    split(t2, r + 1 - l, t2, t3);
+    return merge(merge(t2, t1), t3);
 }
  
 void getArray(node * t) {
@@ -138,14 +95,19 @@ void getArray(node * t) {
     getArray(t->right);
 }
  
-int main() {int n, m, x;
+int main() {
+    int n, m, x, y;
+    vector<int> a;
+ 
     scanf("%d%d", &n, &m);
-    node * root = nullptr;
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &x);
-        root = insert(root, x - 1, i + 1);
+    for (int i = 1; i <= n; i++) {
+        a.push_back(i);
     }
-    printf("%d\n", root->c);
+    node * root = newTreap(a);
+    for (int i = 0; i < m; i++) {
+        scanf("%d%d", &x, &y);
+        root = moveToFront(root, x - 1, y - 1);
+    }
     getArray(root);
     return 0;
 }

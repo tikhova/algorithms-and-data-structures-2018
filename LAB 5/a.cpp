@@ -107,8 +107,6 @@ node * prev(node * root, int x) {
 }
  
 int main() {
-    //freopen("permutation.in", "r", stdin);
-    //freopen("permutation.out", "w", stdout);
     string command;
     int x;
     node * root = nullptr;

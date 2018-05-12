@@ -7,15 +7,17 @@
 #include <cstring>
 #include <cstdio>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <algorithm>
 using namespace std;
  
 struct node {
     int key;
+    int c = 1;
+    int height = 1;
     node * left = nullptr;
     node * right = nullptr;
-    int height = 1;
 };
  
 int height(node * x) {
@@ -29,19 +31,27 @@ int diff(node * x) {
     return height(x->left) - height(x->right);
 }
  
-void fixHeight(node * x) {
+int getC(node * x) {
+    if (x) {
+        return x->c;
+    }
+    return 0;
+}
+ 
+void fix(node * x) {
     if (x == nullptr) {
         return;
     }
     x->height = max(height(x->left), height(x->right)) + 1;
+    x->c = getC(x->left) + getC(x->right) + 1;
 }
  
 node * rotateLeft(node * x) {
     node * y = x->right;
     x->right = y->left;
     y->left = x;
-    fixHeight(x);
-    fixHeight(y);
+    fix(x);
+    fix(y);
     return y;
 }
  
@@ -49,8 +59,8 @@ node * rotateRight(node * x) {
     node* y = x->left;
     x->left = y->right;
     y->right = x;
-    fixHeight(x);
-    fixHeight(y);
+    fix(x);
+    fix(y);
     return y;
 }
  
@@ -65,7 +75,7 @@ node * bigRotateRight(node * x) {
 }
  
 node * balance(node * x) {
-    fixHeight(x);
+    fix(x);
     if (diff(x) == -2) {
         int b = diff(x->right);
         if (b > 0) {
@@ -87,13 +97,6 @@ node * balance(node * x) {
     return x;
 }
  
-node * minimum(node * x) {
-    if (x->left == nullptr) {
-        return x;
-    }
-    return minimum(x->left);
-}
- 
 node * insert(node * x, int value) {
     if (x == nullptr) {
         return new node{ value };
@@ -105,6 +108,13 @@ node * insert(node * x, int value) {
         x->right = insert(x->right, value);
     }
     return balance(x);
+}
+ 
+node * minimum(node * x) {
+    if (x->left == nullptr) {
+        return x;
+    }
+    return minimum(x->left);
 }
  
 node * deleteNode(node * x, int value) {
@@ -132,83 +142,37 @@ node * deleteNode(node * x, int value) {
     return balance(x);
 }
  
-node * search(node * x, int value) {
-    if (x == nullptr || x->key == value) {
-        return x;
+int maxNode(node * t, int k) {
+    if (!t) {
+        return INT_MIN;
     }
-    if (value < x->key) {
-        return search(x->left, value);
+    int n = getC(t->right) + 1;
+    if (k == n) {
+        return t->key;
     }
-    return search(x->right, value);
-}
- 
-node * next(node * root, int x) {
-    node * current = root;
-    node * answer = nullptr;
-    while (current != nullptr) {
-        if (current->key > x) {
-            answer = current;
-            current = current->left;
-        }
-        else {
-            current = current->right;
-        }
-    }   
-    return answer;
-}
- 
-node * prev(node * root, int x) {
-    node * current = root;
-    node * answer = nullptr;
-    while (current != nullptr) {
-        if (current->key < x) {
-            answer = current;
-            current = current->right;
-        }
-        else {
-            current = current->left;
-        }
+    if (k < n) {
+        return maxNode(t->right, k);
     }
-    return answer;
+    else {
+        return maxNode(t->left, k - n);
+    }
 }
  
 int main() {
-    string command;
-    int x;
     node * root = nullptr;
-    node * a;
-    while (cin >> command >> x) {
-        if (command.compare("insert") == 0) {
-            root = insert(root, x);
+    int n, x, y;
+ 
+    scanf("%d\n", &n);
+    for (int i = 0; i < n; ++i) {
+        scanf("%d%d", &x, &y);
+        if (x == 1) {
+            root = insert(root, y);
         }
-        else if (command.compare("delete") == 0) {
-            root = deleteNode(root, x);
+        else if(x == -1) {
+            root = deleteNode(root, y);
         }
-        else if (command.compare("exists") == 0) {
-            if (search(root, x) != nullptr) {
-                printf("true\n");
-            }
-            else {
-                printf("false\n");
-            }
-        }
-        else if (command.compare("next") == 0) {
-            a = next(root, x);
-            if (a == nullptr) {
-                printf("none\n");
-            }
-            else {
-                printf("%d\n", a->key);
-            }
-        }
-        else if (command.compare("prev") == 0) {
-            a = prev(root, x);
-            if (a == nullptr) {
-                printf("none\n");
-            }
-            else {
-                printf("%d\n", a->key);
-            }
+        else {
+            printf("%d\n", maxNode(root, y));
         }
     }
     return 0;
